@@ -1,0 +1,1 @@
+This project for programming parallel EEPROM AT28C16 by Arduino MEGA 2560
