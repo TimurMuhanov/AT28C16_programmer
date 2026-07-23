@@ -78,18 +78,18 @@ const uint8_t pin_dip48[48] = {
 #define AT28C16_D1 DIP48_10
 #define AT28C16_D2 DIP48_11
 #define AT28C16_G  DIP48_12
-#define AT28C16_D3 DIP48_13
-#define AT28C16_D4 DIP48_14
-#define AT28C16_D5 DIP48_15
-#define AT28C16_D6 DIP48_16
-#define AT28C16_D7 DIP48_17
-#define AT28C16_CE DIP48_18
-#define AT28C16_A10 DIP48_19
-#define AT28C16_OE DIP48_20
-#define AT28C16_WE DIP48_21
-#define AT28C16_A9 DIP48_22
-#define AT28C16_A8 DIP48_23
-#define AT28C16_V  DIP48_24
+#define AT28C16_D3 DIP48_37
+#define AT28C16_D4 DIP48_38
+#define AT28C16_D5 DIP48_39
+#define AT28C16_D6 DIP48_40
+#define AT28C16_D7 DIP48_41
+#define AT28C16_CE DIP48_42
+#define AT28C16_A10 DIP48_43
+#define AT28C16_OE DIP48_44
+#define AT28C16_WE DIP48_45
+#define AT28C16_A9 DIP48_46
+#define AT28C16_A8 DIP48_47
+#define AT28C16_V  DIP48_48
 
 const uint8_t at28c16_addr_pins[11] = {
     AT28C16_A0, AT28C16_A1, AT28C16_A2, AT28C16_A3,
@@ -97,7 +97,7 @@ const uint8_t at28c16_addr_pins[11] = {
     AT28C16_A8, AT28C16_A9, AT28C16_A10
 };
 
-const uint8_t at28c16_data_pins[11] = {
+const uint8_t at28c16_data_pins[8] = {
     AT28C16_D0, AT28C16_D1, AT28C16_D2, AT28C16_D3,
     AT28C16_D4, AT28C16_D5, AT28C16_D6, AT28C16_D7
 };
@@ -164,10 +164,10 @@ char doCommand(char cmd, uint16_t addr, uint8_t *data) {
             delay(1);
             tmp_data = 0;
             for (char i=0; i<8; i++) {
+                tmp_data >>= 1;
                 if (digitalRead(at28c16_data_pins[i]) == HIGH) {
-                    tmp_data |= 1;
+                    tmp_data |= 0x80;
                 }
-                tmp_data <<= 1;
             }
             digitalWrite(AT28C16_OE,HIGH);
             digitalWrite(AT28C16_CE,HIGH);
