@@ -1,11 +1,11 @@
 /*
  * Commands formats:
  *    ".WAAADD+" ---- write to address AAA (in hex) data (DD) with checksum ('+' - it is low nibble of sum: 0+every char)
- *        answer: ".WAAADD-" - of OK, ".WxxxEE-" - if ERROR where xxx = number of error, ('-' - difference: 0-every char)
+ *        answer: ".WAAADD-" - of OK, ".WxxxER-" - if ERROR where xxx = number of error, ('-' - difference: 0-every char)
  *    ".RAAA00+" ---- read byte from AAA (in hex), 00 it is "00"
- *        answer: ".RAAADD-" or ".RxxxEE-"
+ *        answer: ".RAAADD-" or ".RxxxER-"
  *    ".TPPP0x+" ---- test pin, x=0/1, PPP - number of pin for test (default all = 1)
- *        answer: ".TPPP0x-" or ".TxxxEE-"
+ *        answer: ".TPPP0x-" or ".TxxxER-"
  */
 
 #define DIP48_1  24
@@ -178,8 +178,8 @@ char doCommand(char cmd, uint16_t addr, uint8_t *data) {
             if ((addr > 48) || (addr < 1)) {
                 return 0x22;
             }
-            if (data > 1) { return 0x23; }
-            if (data) { digitalWrite(pin_dip48[addr-1],HIGH); }
+            if ((*data) > 1) { return 0x23; }
+            if (*data) { digitalWrite(pin_dip48[addr-1],HIGH); }
             else { digitalWrite(pin_dip48[addr-1],LOW); }
             break;
         default:
@@ -194,22 +194,25 @@ char doCommand(char cmd, uint16_t addr, uint8_t *data) {
 }
 
 char numFromHex(char *buf, char sz, uint16_t *res) {
-    uint16_t tmp = 0, tmp_res = 0;
-    char error = 0;
+//    Serial.print("numFromHex ");
+    uint16_t tmp_res = 0;
+    char error = 0, tmp;
     for (char i=0;i<sz;i++) {
-        tmp = rx_buf[i];
-        if ((tmp <= 'A') && (tmp <= 'F')) {
+        tmp = buf[i];
+        if ((tmp >= 'A') && (tmp <= 'F')) {
             tmp -= ('A'-10);
         } else {
-            if ((tmp <= '0') && (tmp <= '9')) {
+            if ((tmp >= '0') && (tmp <= '9')) {
                 tmp -= '0';
             } else {
-                error = i-2 + 0x10;
+//                Serial.print(" error in symbol ");
+//                Serial.println(buf[i]);
+                error = i + 0x10;
                 break;
             }
         }
         tmp_res <<= 4;
-        tmp_res |= tmp;
+        tmp_res |= (uint16_t)tmp;
     }
     *res = tmp_res;
     return error;
@@ -225,6 +228,7 @@ void numToHex(char *buf, char sz, uint16_t num) {
         if (tmp>9) { tmp += ('A'-10); }
         else { tmp += '0'; }
         buf[new_sz-1-i] = tmp;
+        num_tmp >>= 4;
     }
 }
 
@@ -240,24 +244,35 @@ void decodeCommand(void) {
     if (tmp != rx_buf[SERIAL_RX_COMMAND_SIZE-1]) {
         error = 1;
     }
+//    Serial.write("Error ");
+//    Serial.println((int)error);
+//    Serial.println((int)tmp);
     // get address
     uint16_t addr=0;
     if (!error) {
         error = numFromHex(rx_buf+2,3,&addr);
     }
+//    Serial.write("Error ");
+//    Serial.println((int)error);
     // get data (if need)
     uint8_t data=0;
     if (!error) {
         uint16_t tmp16;
-        error = numFromHex(rx_buf+5,3,&tmp16);
+        error = numFromHex(rx_buf+5,2,&tmp16);
         if (!error) {
             data = (uint8_t)tmp16;
         }
     }
+//    Serial.print("addr=");
+//    Serial.print((int)addr);
+//    Serial.print(" data=");
+//    Serial.println((int)data);
     // do it command
     if (!error) {
         error = doCommand(rx_buf[1],addr,&data);
     }
+//    Serial.write("Error ");
+//    Serial.println((int)error);
     // clear flag received
     flag_rx_start_received = 0;
     // answer
@@ -265,12 +280,14 @@ void decodeCommand(void) {
     if (error) {
         numToHex(tx_buf+2,3,error);
         tx_buf[5] = 'E';
-        tx_buf[6] = 'E';
+        tx_buf[6] = 'R';
     } else {
         if (tx_buf[1] == 'R') {
             numToHex(tx_buf+5,2,data);
         }
     }
+//    Serial.write("Error ");
+//    Serial.println((int)error);
     tmp = 0;
     for (char i=0; i<7; i++) { tmp -= tx_buf[i]; }
     tmp &= 0xf;
