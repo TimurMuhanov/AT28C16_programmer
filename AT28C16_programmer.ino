@@ -134,7 +134,7 @@ char doCommand(char cmd, uint16_t addr, uint8_t *data) {
         return 0x20;
     }
     uint8_t tmp_data = *data;
-    uint8_t tmp_addr = addr;
+    uint16_t tmp_addr = addr;
     if ((cmd == 'W') || (cmd == 'R')) {
         for (char i=0; i<11; i++) {
             if (tmp_addr & 1) { digitalWrite(at28c16_addr_pins[i],HIGH); }

@@ -8,3 +8,5 @@ For program
 ``` bash
 python3 AT28C16_programmer.py /dev/ttyUSB0 relative/path/to/file.bin
 ```
+
+now speed of full program (2k) is 86 sec (or 41ms per byte) : 24 byte/sec
